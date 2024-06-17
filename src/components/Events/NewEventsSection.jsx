@@ -7,6 +7,7 @@ import {fetchEvents} from "../../utils/http.js";
 
 export default function NewEventsSection() {
 
+  // * Using react-query is optional and we can also implement using useEffect and handle the API calls. But react-query gives out of the box features like caching and reloading content when moved to the browser tab.
   const { data, isPending, isError, error } = useQuery({
     queryFn: fetchEvents,
     queryKey: ['events']
