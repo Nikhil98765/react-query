@@ -1,11 +1,15 @@
+import { useState } from 'react';
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { Link, Outlet, useNavigate, useParams } from 'react-router-dom';
 
 import Header from '../Header.jsx';
-import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { deleteEvent, fetchEvent, queryClient } from '../../utils/http.js';
 import ErrorBlock from '../UI/ErrorBlock.jsx';
+import Modal from '../UI/Modal.jsx';
 
 export default function EventDetails() {
+
+  const [isDelete, setIsDelete] = useState(false);
 
   const params = useParams();
   const navigate = useNavigate();
@@ -15,7 +19,7 @@ export default function EventDetails() {
     queryFn: ({signal}) => fetchEvent({ id: params['id'], signal })
   });
 
-  const { mutate, isError: isDeleteError, isPending: isDeletePending, error: deleteError} = useMutation({
+  const { mutate, isError: isDeleteError, isPending: isDeletePending, error: deleteError } = useMutation({
     mutationFn: deleteEvent,
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -25,7 +29,15 @@ export default function EventDetails() {
       });
       navigate('/events');
     }
-  })
+  });
+
+  function handleStartDelete() {
+    setIsDelete(true);
+  }
+
+  function handleStopDelete() {
+    setIsDelete(false);
+  }
 
   function deleteHandler() {
     mutate({ id: params["id"] });    
@@ -67,16 +79,9 @@ export default function EventDetails() {
         <header>
           <h1>{title}</h1>
           <nav>
-            <button onClick={deleteHandler}>Delete</button>
+            <button onClick={handleStartDelete}>Delete</button>
             <Link to="edit">Edit</Link>
           </nav>
-          {isDeleteError && (
-            <ErrorBlock
-              title="Error occurred!"
-              message={deleteError || "Error occurred while deleting event"}
-            />
-          )}
-          {isDeletePending && <p>Deleting...</p>}
         </header>
         <div id="event-details-content">
           <img src={`http://localhost:3000/${image}`} alt={title} />
@@ -97,15 +102,41 @@ export default function EventDetails() {
 
   return (
     <>
+      {isDelete && (
+        <Modal onClose={handleStopDelete}>
+          <h2>Are you sure?</h2>
+          <p>
+            Do you really want to delete this event? This action cannot be
+            undone.
+          </p>
+          <div className="form-actions">
+            {isDeletePending && <p>Deleting...</p>}
+            {!isDeletePending && (
+              <>
+                <button onClick={handleStopDelete} className="button-text">
+                  Cancel
+                </button>
+                <button onClick={deleteHandler} className="button">
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+          {isDeleteError && (
+            <ErrorBlock
+              title="Error occurred!"
+              message={deleteError || "Error occurred while deleting event"}
+            />
+          )}
+        </Modal>
+      )}
       <Outlet />
       <Header>
         <Link to="/events" className="nav-item">
           View all Events
         </Link>
       </Header>
-      <article id="event-details">
-        { content }
-      </article>
+      <article id="event-details">{content}</article>
     </>
   );
 }
