@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import Modal from '../UI/Modal.jsx';
 import EventForm from './EventForm.jsx';
-import { createNewEvent } from '../../utils/http.js';
+import { createNewEvent, queryClient } from '../../utils/http.js';
 import ErrorBlock from '../UI/ErrorBlock.jsx';
 
 export default function NewEvent() {
@@ -11,7 +11,11 @@ export default function NewEvent() {
   
   // * useMutation is used when we want to send data through http requests. It doesn't cache the responses.
   const { mutate, isError, error, isPending } = useMutation({
-    mutationFn: createNewEvent
+    mutationFn: createNewEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      navigate('/events')
+    }
   })
 
   function handleSubmit(formData) {
