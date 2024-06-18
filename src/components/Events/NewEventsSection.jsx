@@ -9,13 +9,13 @@ export default function NewEventsSection() {
 
   // * Using react-query is optional and we can also implement using useEffect and handle the API calls. But react-query gives out of the box features like caching and reloading content when moved to the browser tab.
   const { data, isPending, isError, error } = useQuery({
-    queryFn: fetchEvents,
-    queryKey: ['events'],
+    queryKey: ["events", { max: 3 }],
+    queryFn: ({ signal, queryKey }) => fetchEvents({ signal, ...queryKey[1] }),
     // * Describes the time to trigger another request after the first request if cached data is present to keep sync with backend data.
     staleTime: 5000,
     // * cache validation time
-    // gcTime: 5000 
-  })
+    // gcTime: 5000
+  });
 
   let content;
 
